@@ -124,3 +124,74 @@ void promotion(int x, int y, piece plateau[TAILLE][TAILLE]){
     plateau[x][y].opt=3;
     return;
 }
+
+
+void creer_partie_personnalisee(piece tableau[TAILLE][TAILLE]) {
+    char ligne[TAILLE + 1];
+    printf("Entrez la configuration du plateau ligne par ligne (X pour vide, p pour pion bleu, P pour pion rouge, c pour cavalier bleu, C pour cavalier rouge, f pour fou bleu, F pour fou rouge, t pour tour bleu, T pour tour rouge, d pour dame bleu, D pour dame rouge, r pour roi bleu, R pour roi rouge):\n");
+    
+    for (int i = 0; i < TAILLE; i++) {
+        printf("Ligne %d: ", i + 1);
+        scanf("%s", ligne);
+        for (int j = 0; j < TAILLE; j++) {
+            switch (ligne[j]) {
+                case 'X':
+                    tableau[i][j].rang = -1;
+                    tableau[i][j].couleur = -1;
+                    break;
+                case 'p':
+                    tableau[i][j].rang = PION;
+                    tableau[i][j].couleur = 0;
+                    break;
+                case 'P':
+                    tableau[i][j].rang = PION;
+                    tableau[i][j].couleur = 1;
+                    break;
+                case 'c':
+                    tableau[i][j].rang = CAVALIER;
+                    tableau[i][j].couleur = 0;
+                    break;
+                case 'C':
+                    tableau[i][j].rang = CAVALIER;
+                    tableau[i][j].couleur = 1;
+                    break;
+                case 'f':
+                    tableau[i][j].rang = FOU;
+                    tableau[i][j].couleur = 0;
+                    break;
+                case 'F':
+                    tableau[i][j].rang = FOU;
+                    tableau[i][j].couleur = 1;
+                    break;
+                case 't':
+                    tableau[i][j].rang = TOUR;
+                    tableau[i][j].couleur = 0;
+                    break;
+                case 'T':
+                    tableau[i][j].rang = TOUR;
+                    tableau[i][j].couleur = 1;
+                    break;
+                case 'd':
+                    tableau[i][j].rang = DAME;
+                    tableau[i][j].couleur = 0;
+                    break;
+                case 'D':
+                    tableau[i][j].rang = DAME;
+                    tableau[i][j].couleur = 1;
+                    break;
+                case 'r':
+                    tableau[i][j].rang = ROI;
+                    tableau[i][j].couleur = 0;
+                    break;
+                case 'R':
+                    tableau[i][j].rang = ROI;
+                    tableau[i][j].couleur = 1;
+                    break;
+                default:
+                    printf("Caractère invalide. Réessayez.\n");
+                    j--;
+                    break;
+            }
+        }
+    }
+}
