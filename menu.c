@@ -212,8 +212,9 @@ void page12(partie *nv){
     printf("1. Nom  :  %s\n",((nv->nom)));
     printf("2. Niveau IA  :  %d\n",(nv->niveauIA));
     printf("3. Aide à la visée ?  :  %d\n",(nv->aidealavisee));
-    printf("4. LANCER PARTIE\n");
-    printf("5. Quitter\n");
+    printf("4. ?Tableau personnalisé?\n");
+    printf("5. LANCER PARTIE\n");
+    printf("6. Quitter\n");
     printf("\nVotre choix : ");
     int choix;
     scanf("%d", &choix);
@@ -230,6 +231,8 @@ void page12(partie *nv){
         page123(nv);
         return;
     case 4:
+        creer_partie_personnalisee(nv->plateau);
+    case 5:
         enregistrerPartie(nv);
         jeu(nv);
         return;
@@ -382,3 +385,5 @@ int main(){
 }
 
 //A
+
+
