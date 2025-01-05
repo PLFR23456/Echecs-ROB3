@@ -98,38 +98,47 @@ void initialise_plateau(piece plateau[TAILLE][TAILLE]){
 }
 
 
-void promotion(int x, int y, piece plateau[TAILLE][TAILLE]){
+void promotion(int x, int y, piece plateau[TAILLE][TAILLE]) {
     char c;
-    do{
-    printf("Votre pion a atteint la dernière rangée, c'est l'heure de la promotion !\n  Tapez la première lettre de la pièce par laquelle vous voulez le remplacer : (CAVALIER ; FOU ; TOUR ; DAME ; ROI)\n");
-    scanf("%c",&c);
-    c=toupper(c);
-    if(c=='C' || c=='F' || c=='T' || c=='D'){break;}
-    }while(1);
-    switch (c)
-    {
-    case 'C':
-        plateau[x][y].rang=CAVALIER;
-        break;
-    case 'F':
-        plateau[x][y].rang=FOU;
-        break;
-    case 'T':
-        plateau[x][y].rang=TOUR;
-        break;
-    case 'D':
-        plateau[x][y].rang=DAME;
-        break;
+    int valid = 0; // Flag pour vérifier si l'entrée est valide
+    while (!valid) {
+        printf("Votre pion a atteint la dernière rangée, c'est l'heure de la promotion !\n");
+        printf("Tapez la première lettre de la pièce par laquelle vous voulez le remplacer : (CAVALIER ; FOU ; TOUR ; DAME ; ROI)\n");
+        scanf(" %c", &c); // L'espace avant %c ignore les espaces blancs résiduels
+        viderTampon(); // Vide le tampon après la lecture
+        c = toupper(c); // Convertit le caractère en majuscule pour simplifier la comparaison
+
+        if (c == 'C' || c == 'F' || c == 'T' || c == 'D') {
+            valid = 1; // Marque l'entrée comme valide
+            switch (c) {
+                case 'C':
+                    plateau[x][y].rang = CAVALIER;
+                    break;
+                case 'F':
+                    plateau[x][y].rang = FOU;
+                    break;
+                case 'T':
+                    plateau[x][y].rang = TOUR;
+                    break;
+                case 'D':
+                    plateau[x][y].rang = DAME;
+                    break;
+            }
+            plateau[x][y].opt = 3;
+        } else {
+            printf("Entrée invalide. Veuillez recommencer.\n");
+        }
     }
-    plateau[x][y].opt=3;
-    return;
 }
 
 
 void creer_partie_personnalisee(piece tableau[TAILLE][TAILLE]) {
+    while(1){
     char ligne[TAILLE + 1];
-    printf("Entrez la configuration du plateau ligne par ligne (X pour vide, p pour pion bleu, P pour pion rouge, c pour cavalier bleu, C pour cavalier rouge, f pour fou bleu, F pour fou rouge, t pour tour bleu, T pour tour rouge, d pour dame bleu, D pour dame rouge, r pour roi bleu, R pour roi rouge):\n");
-    
+    printf("Entrez la configuration du plateau ligne par ligne (X pour vide, p pour pion bleu, P pour pion rouge, c pour cavalier bleu, C pour cavalier rouge, f pour fou bleu, F pour fou rouge, t pour tour bleu, T pour tour rouge, d pour dame bleu, D pour dame rouge, r pour roi bleu, R pour roi rouge):\n les minuscules/bleus commencent en haut et les majuscules/rouges en bas. Pour éviter les problèmes de logique\n");
+    int roiblanc,roinoir;
+    roiblanc=0;
+    roinoir=0;
     for (int i = 0; i < TAILLE; i++) {
         printf("Ligne %d: ", i + 1);
         scanf("%s", ligne);
@@ -182,16 +191,26 @@ void creer_partie_personnalisee(piece tableau[TAILLE][TAILLE]) {
                 case 'r':
                     tableau[i][j].rang = ROI;
                     tableau[i][j].couleur = 0;
+                    roiblanc=1;
                     break;
                 case 'R':
                     tableau[i][j].rang = ROI;
                     tableau[i][j].couleur = 1;
+                    roinoir=1;
                     break;
                 default:
                     printf("Caractère invalide. Réessayez.\n");
-                    j--;
+                    i--;
                     break;
             }
         }
+    }
+    if (roiblanc==1 && roinoir==1){
+        break;
+    }
+    else{
+        printf("Il doit y avoir un roi de chaque couleur sur le plateau.\n");
+    }
+    
     }
 }

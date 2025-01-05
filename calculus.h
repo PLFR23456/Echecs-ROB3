@@ -3,7 +3,7 @@
 #include "menu.h"
 #ifndef CALCULUS_H
 #define CALCULUS_H
-int applymove(piece plateau[TAILLE][TAILLE], deplacement depart, deplacement arrivee, int test);
+int applymove(piece plateau[TAILLE][TAILLE], deplacement depart, deplacement arrivee, int test, int* scorewhite, int* scoreblack, int* mortsnoirs, int* mortsblancs);
 deplacement *possiblemove(piece plateau[TAILLE][TAILLE], deplacement depart);
 int estunvraicoup(int coup,deplacement *liste,int* infosurlecoup);
 void freelist(deplacement *liste);

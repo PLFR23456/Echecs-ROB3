@@ -6,40 +6,48 @@
 #include "piece.h"
 #include "plateau.h"
 #include "calculus.h"
+#include "temps.h"
 
 int demander_et_convertir_case();
 int choixducoup1(piece tableau[TAILLE][TAILLE], int couleur, int tab[2], int aidealavisee);
 int v;
+void score(partie *p);
 void jeu(partie *p){
     int tour = p->aquiletour; 
     int pause=0; // variable tampon pour indiquer une pause dans le jeu
     if(p->etat==1){p->etat=0;}
     while(p->etat==0){
-        if(tour==0){ // TOUR A MOI JOUEUR HUMAIN
+        ////////////////// TOUR DE L'HUMAIN / JOUEUR 0
+        if(tour==0){
         affiche(p->plateau,0);
         int tabpositions[3]; 
         int c1=choixducoup1(p->plateau,0,tabpositions,p->aidealavisee); // la tabposition est mis à jour avec cette ligne
         if(c1==-1){pause=1;break;}
-        if(c1==-2){p->etat=2;return;}
+        if(c1==-2){p->etat=2;p->gagnant=1;break;}
+        if(c1==-3){p->etat=2;p->gagnant=2;break;}
+        p->coupsjoues++;
         deplacement d1 = {tabpositions[0]/10,tabpositions[0]%10};
         deplacement d2 = {tabpositions[1]/10,tabpositions[1]%10};
-        applymove(p->plateau,d1,d2,0);
-        tour=1;       
-               
-
+        applymove(p->plateau,d1,d2,0,&p->scorewhite,&p->scoreblack,&p->mortsnoirs,&p->mortsblancs);
+        verifs(p,0,0);
+        tour=1;      
         }
         affiche(p->plateau,0);
+
+
+
+        ////////////////// TOUR DE L'IA / JOUEUR 1
         if(tour==1){ 
-            //IA
-            verifs(p,1,0);
             if(p->niveauIA==0){ //si cest du humain contre humain
                 affiche(p->plateau,0);
                 int tabpositions[2]; 
                 int c1=choixducoup1(p->plateau,1,tabpositions,p->aidealavisee);
                 if(c1==-1){pause=1;break;}
+                if(c1==-2){p->etat=2;p->gagnant=0;break;}
+                if(c1==-3){p->etat=2;p->gagnant=2;break;}
                 deplacement d1 = {tabpositions[0]/10,tabpositions[0]%10};
                 deplacement d2 = {tabpositions[1]/10,tabpositions[1]%10};
-                applymove(p->plateau,d1,d2,0);
+                applymove(p->plateau,d1,d2,0,&p->scorewhite,&p->scoreblack,&p->mortsnoirs,&p->mortsblancs);
                 tour=0;
             }
             if(p->niveauIA==1 || p->niveauIA==2 || p->niveauIA==3){
@@ -63,9 +71,11 @@ void jeu(partie *p){
                     printf("\033[91m/!\\ Plus de movements disponibles /!\\");
                     if(echec==1){printf("\nEchec et mat !\n\033[0m");}
                     else{printf("\nPat !\n\033[0m");}
-                    printf("pour l'équipe %c",tour);
+                    printf("pour l'équipe %d\n",tour);
                     freelist(listepionjouables);
-                    return;
+                    if(echec==1){p->etat=2;p->gagnant=1;}
+                    else{p->etat=2;p->gagnant=2;}
+                    break;
             ////////////////////////////////////////////////////////////////////////////////// ECHEC ET MAT OU PAT
                 }   
                 
@@ -74,15 +84,13 @@ void jeu(partie *p){
                 int sizeofliste;
                 sizeofliste=tailleliste(listepionjouables);
                 int entier_aleatoire = rand() % sizeofliste;
-                printf("liste de taille %d\n",sizeofliste);
-                lireliste(listepionjouables);
                 if(entier_aleatoire!=0){
                 for(int i=0;i<entier_aleatoire;i++){
                     listepionjouables=listepionjouables->next;
                 }}
                 deplacement start={listepionjouables->x,listepionjouables->y};
                 freelist(listepionjouables);
-                printf("L'IA a choisi de déplacer le pion en %d%d\n",start.x,start.y);
+                printf("L'IA a choisi de déplacer le pion en x=%d y=%d\n",TAILLE-start.x,start.y+1);
                 //////choix du pion à déplacer
 
                 //////choix du déplacement
@@ -91,15 +99,12 @@ void jeu(partie *p){
                 if(p->niveauIA==2 || p->niveauIA==3){
                     listedep=sendattackpossibilites(p->plateau,listedep, p->niveauIA);
                 }
-                printf("chosiis ! ");
-                lireliste(listedep);
                 sizeofliste=tailleliste(listedep);
                 entier_aleatoire = rand() % sizeofliste;
                 if(entier_aleatoire!=0){
                 for(int i=0;i<entier_aleatoire;i++){
                     listedep=listedep->next;
                 }}
-                printf("dep");
                 deplacement arrivee={listedep->x,listedep->y};
                 freelist(listedep);
                 //////choix du déplacement
@@ -110,13 +115,18 @@ void jeu(partie *p){
                 }
 
 
-                applymove(p->plateau,start,arrivee,0);
+                applymove(p->plateau,start,arrivee,0,&p->scorewhite,&p->scoreblack,&p->mortsnoirs,&p->mortsblancs);
                 tour=0;
             }
-            p->aquiletour=tour;  
+            p->aquiletour=tour;
+            p->coupsjoues++;
+            verifs(p,1,0);  
         }
     }
     if(pause==1){remplacerOuAjouterPartie(p);}
+    score(p);
+    attendre(5);
+    afficherMenu();
     return;
 }
 
@@ -142,9 +152,10 @@ int choixducoup1(piece tableau[TAILLE][TAILLE], int couleur, int tab[3],int aide
             printf("\033[91m/!\\ Plus de movements disponibles /!\\");
             if(echec==1){printf("\nEchec et mat !\n\033[0m");}
             else{printf("\nPat !\n\033[0m");}
-            printf("pour l'équipe %c",couleur);
+            printf("pour l'équipe %d\n",couleur);
             freelist(listepionjouables);
-            return -2;
+            if(echec==1){return -2;}
+            else{return -3;}
         }
         ////////////////////////////////////////////////////////////////////////////////// ECHEC ET MAT OU PAT
         printf("Donnez la case du pion à déplacer !");
@@ -225,3 +236,20 @@ int demander_et_convertir_case() {
     }while (1);  // Continuer à demander tant que l'entrée est invalide
 }
 
+void score(partie *p){
+    if(p->etat==2){printf("Partie terminée !\n");
+    printf("Score final :\n");
+    }
+    else{
+    printf("-- Partie en pause -- !\n");printf("Score :\n");}
+    printf("Score bleu : %d\n",p->scoreblack);
+    printf("Score rouge : %d\n",p->scorewhite);
+    printf("Nombre de coups joués : %d\n",p->coupsjoues);
+    printf("Nombre de pièces perdues par le joueur bleu : %d\n",p->mortsnoirs);
+    printf("Nombre de pièces perdues par le joueur rouge : %d\n",p->mortsblancs);
+    printf("Temps de jeu : %d secondes\n",p->temps);
+    if(p->etat==2){if(p->gagnant==0){printf("Joueur bleu gagnant");}
+    else if(p->gagnant==1){printf("Joueur rouge gagnant");}
+    else{printf("Match nul !");}}
+    return;
+}

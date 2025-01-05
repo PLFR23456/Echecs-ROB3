@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -g
-OBJFILES = menu.o jeu.o temps.o plateau.o calculus.o
+OBJFILES = menu.o jeu.o temps.o plateau.o calculus.o misc.o
 EXE = menu
 
 # Règle pour compiler l'exécutable
@@ -23,14 +23,18 @@ plateau.o: plateau.c plateau.h
 calculus.o: calculus.c calculus.h
 	$(CC) $(CFLAGS) -c calculus.c
 
+misc.o: misc.c misc.h
+	$(CC) $(CFLAGS) -c misc.c
+
 # Nettoyage des fichiers objets et exécutables
 ##del /Q $(OBJFILES) $(EXE)
 clean:
-	rm -f $(OBJFILES) $(EXE)
+	del /Q $(OBJFILES) $(EXE)
 
 # Règle pour exécuter le programme après compilation
 # rajouter chcp 65001  pour windows
 run: $(EXE)
+	chcp 65001
 	./$(EXE)
 
 # Règle par défaut : tout faire

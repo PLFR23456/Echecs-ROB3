@@ -4,6 +4,7 @@
 #include "plateau.h"
 #include "menu.h"
 #include "calculus.h"
+#include "misc.h"
 enum cas{RIEN, PIONTEAM0MANGER, PIONTEAM1MANGER};
 enum cas2{RAS, PRISEENPASSANT};
 
@@ -11,7 +12,7 @@ enum cas2{RAS, PRISEENPASSANT};
 int verificationdeplacementmenantalechec(int xarrive, int yarrive, int info, piece plateau[TAILLE][TAILLE], deplacement depart);
 void removeimpossiblemove(deplacement* listemove, deplacement depart, piece plateau[TAILLE][TAILLE]);
 int estdanslaliste(int dep, deplacement* liste);
-int applymove(piece plateau[TAILLE][TAILLE], deplacement depart, deplacement arrivee, int test){
+int applymove(piece plateau[TAILLE][TAILLE], deplacement depart, deplacement arrivee, int test, int* scorewhite, int* scoreblack, int* mortsnoirs, int* mortsblancs){
     //les coups sont donnes de la maniere suivant : depart:xy et arrivee:XY
     // x et X représentent la ligne de depart/arrivée
     // et y Y la colonne
@@ -20,9 +21,15 @@ int applymove(piece plateau[TAILLE][TAILLE], deplacement depart, deplacement arr
     int y=depart.y;
     int X=arrivee.x;
     int Y=arrivee.y;
+    /*
     if(plateau[X][Y].couleur==0){val=10;} //pion team 0 mangé
     if(plateau[X][Y].couleur==1){val=20;} //pion team 1 mangé
-    if(plateau[x][y].rang!=-1){val=val+plateau[x][y].rang;}
+    if(plateau[x][y].rang!=-1){val=val+plateau[x][y].rang;} //si le pion de départ n'est pas une case vide, alors on ajoute sa valeur à val
+    */
+    if(test==0){ // test =0 signifie que le mouvement va être appliqué définitivement (à contrario des appels de cette fonction lors d'une détection d'échec)
+        if(plateau[X][Y].couleur==0){(*mortsnoirs)++; (*scorewhite)=(*scorewhite)+valeur_piece(plateau[X][Y].rang);} //pion team 0 mangé
+        if(plateau[X][Y].couleur==1){(*mortsblancs)++; (*scoreblack)=(*scoreblack)+valeur_piece(plateau[X][Y].rang);} //pion team 1 mangé
+    }
     plateau[X][Y].rang=plateau[x][y].rang;
     plateau[X][Y].couleur=plateau[x][y].couleur;
     plateau[X][Y].opt=plateau[x][y].opt;
@@ -33,6 +40,7 @@ int applymove(piece plateau[TAILLE][TAILLE], deplacement depart, deplacement arr
         if(plateau[X][Y].rang==PION || plateau[X][Y].rang==TOUR){plateau[X][Y].opt=2;}
         else{plateau[X][Y].opt=0;}
     }
+    
     return val;
 }
 
@@ -52,7 +60,7 @@ int estunvraicoup(int coup,deplacement *liste, int* infosurlecoup){
 }
 
 void freelist(deplacement *liste){
-    if(liste==NULL){return;}
+    if(liste==NULL || liste->info==-1){return;}
     else{
         freelist(liste->next);
         free(liste);
@@ -223,8 +231,8 @@ void listedemespions(piece plateau[TAILLE][TAILLE],int couleur, deplacement *lis
                 if(listemove->info!=-1){ //                 + si ce pion a 1 ou + déplacement dispos 
                     removeimpossiblemove(listemove,dep,plateau);
                     int ajoutable=0;
-                    if(niveauIA>=2){
-                        if(listemove->info!=-1){  //            + si le pion a 1 ou + déplacement dispos (après vérif echec et mat)
+                    if(listemove->info!=-1){
+                        if(niveauIA>=2){  //            + si le pion a 1 ou + déplacement dispos (après vérif echec et mat)
                             deplacement* adresse = listemove;
                             if(niveauIA>=2){
                                 while (adresse != NULL) {
@@ -258,8 +266,9 @@ void listedemespions(piece plateau[TAILLE][TAILLE],int couleur, deplacement *lis
                                 
                             }
                         }
+                        else{ajoutable=1;}
+                        
                     }
-                    else{ajoutable=1;}
                     if(ajoutable==1){addtolist(i,j,nvmax,liste,plateau);}
                 }
             }
@@ -298,7 +307,7 @@ int verificationdeplacementmenantalechec(int xarrive, int yarrive, int info, pie
     piece temp={plateau[xarrive][yarrive].rang,plateau[xarrive][yarrive].couleur,plateau[xarrive][yarrive].opt}; //LA METTRE EN MALLOC!!!
     int couleur = plateau[depart.x][depart.y].couleur;
     deplacement arrivee={xarrive,yarrive};
-    applymove(plateau,depart,arrivee,1);
+    applymove(plateau,depart,arrivee,1,0,0,0,0);
     //
     int roix=0;
     int roiy=0;
@@ -307,7 +316,7 @@ int verificationdeplacementmenantalechec(int xarrive, int yarrive, int info, pie
     deplacement roi={roix,roiy};
     echec=roienechec(plateau, roi);
     // remise en ordre
-    applymove(plateau,arrivee,depart,1);
+    applymove(plateau,arrivee,depart,1,0,0,0,0);
     plateau[xarrive][yarrive].couleur=temp.couleur;
     plateau[xarrive][yarrive].rang=temp.rang;
     plateau[xarrive][yarrive].opt=temp.opt;
@@ -325,7 +334,6 @@ int verifs(partie* p,int couleur,int infoatransmettre){
             if(p->plateau[i][j].opt==2 && p->plateau[i][j].couleur==couleur){p->plateau[i][j].opt=0;}
             if(p->plateau[i][j].rang==PION && p->plateau[i][j].couleur==couleur && i==7*(1-couleur)){
                 if(p->niveauIA==0 || couleur==0){
-                    printf("promotion !!");
                     deplacement montrer={i,j,-2};
                     affiche(p->plateau,&montrer);
                     promotion(i, j, p->plateau); //promotion !!
@@ -404,7 +412,6 @@ deplacement* sendattackpossibilites(piece tableau[TAILLE][TAILLE], deplacement* 
                     (*dernier)->next = NULL;
                     dernier = &((*dernier)->next);
 
-                    printf("adresse x= %d y= %d info= %d\n", adresse->x, adresse->y, adresse->info);
                 }
             }
         }
