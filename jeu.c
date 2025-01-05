@@ -14,15 +14,13 @@ int v;
 void score(partie *p);
 void jeu(partie *p){
     int tour = p->aquiletour; 
-    int pause=0; // variable tampon pour indiquer une pause dans le jeu
-    if(p->etat==1){p->etat=0;}
     while(p->etat==0){
         ////////////////// TOUR DE L'HUMAIN / JOUEUR 0
         if(tour==0){
         affiche(p->plateau,0);
         int tabpositions[3]; 
         int c1=choixducoup1(p->plateau,0,tabpositions,p->aidealavisee); // la tabposition est mis à jour avec cette ligne
-        if(c1==-1){pause=1;break;}
+        if(c1==-1){break;}
         if(c1==-2){p->etat=2;p->gagnant=1;break;}
         if(c1==-3){p->etat=2;p->gagnant=2;break;}
         p->coupsjoues++;
@@ -42,7 +40,7 @@ void jeu(partie *p){
                 affiche(p->plateau,0);
                 int tabpositions[2]; 
                 int c1=choixducoup1(p->plateau,1,tabpositions,p->aidealavisee);
-                if(c1==-1){pause=1;break;}
+                if(c1==-1){break;}
                 if(c1==-2){p->etat=2;p->gagnant=0;break;}
                 if(c1==-3){p->etat=2;p->gagnant=2;break;}
                 deplacement d1 = {tabpositions[0]/10,tabpositions[0]%10};
@@ -123,7 +121,7 @@ void jeu(partie *p){
             verifs(p,1,0);  
         }
     }
-    if(pause==1){remplacerOuAjouterPartie(p);}
+    remplacerOuAjouterPartie(p);
     score(p);
     attendre(5);
     afficherMenu();

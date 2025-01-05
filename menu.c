@@ -69,6 +69,98 @@ void remplacerOuAjouterPartie(partie *p) {
 
     fclose(fichier);
 }
+void afficherStatistiques() {
+    clearecran();
+    printf("\n=== Statistiques ===\n");
+
+    // Ouvrir le fichier des parties
+    FILE *fichier = fopen("save", "rb");
+    if (fichier == NULL) {
+        perror("Erreur d'ouverture du fichier");
+        attendre(2);
+        afficherMenu();
+        return;
+    }
+
+    size_t taillePartie = sizeof(partie);
+    fseek(fichier, 0, SEEK_END);
+    long tailleFichier = ftell(fichier);
+    int nbParties = tailleFichier / taillePartie;
+
+    if (nbParties == 0) {
+        printf("Aucune partie enregistrée.\n");
+        fclose(fichier);
+        attendre(2);
+        afficherMenu();
+        return;
+    }
+
+    // Allouer de la mémoire pour stocker les parties
+    partie *parties = (partie *)malloc(nbParties * taillePartie);
+    if (parties == NULL) {
+        perror("Erreur d'allocation mémoire");
+        fclose(fichier);
+        afficherMenu();
+        return;
+    }
+
+    rewind(fichier);
+    fread(parties, taillePartie, nbParties, fichier);
+    fclose(fichier);
+
+    // Statistiques cumulées
+    int totalCoupsJoues = 0;
+    int totalTemps = 0;
+    int totalMortsBlancs = 0;
+    int totalMortsNoirs = 0;
+    int totalScoreWhite = 0;
+    int totalScoreBlack = 0;
+
+    // Afficher les statistiques de chaque partie
+    for (int i = 0; i < nbParties; i++) {
+        printf("\nPartie %d :\n", i + 1);
+        printf("Nom : %s\n", parties[i].nom);
+        printf("Coups joués : %d\n", parties[i].coupsjoues);
+        printf("Morts blancs : %d\n", parties[i].mortsblancs);
+        printf("Morts noirs : %d\n", parties[i].mortsnoirs);
+        printf("Score blancs : %d\n", parties[i].scorewhite);
+        printf("Score noirs : %d\n", parties[i].scoreblack);
+        if(parties[i].etat == 2){
+        printf("Gagnant : %s\n", parties[i].gagnant == 0 ? "Joueur 0" : parties[i].gagnant == 1 ? "Joueur 1" : "Nul/Pat");}
+
+        // Ajouter aux statistiques cumulées
+        totalCoupsJoues += parties[i].coupsjoues;
+        totalTemps += parties[i].temps;
+        totalMortsBlancs += parties[i].mortsblancs;
+        totalMortsNoirs += parties[i].mortsnoirs;
+        totalScoreWhite += parties[i].scorewhite;
+        totalScoreBlack += parties[i].scoreblack;
+    }
+
+    // Afficher les statistiques cumulées
+    printf("\n=== Statistiques cumulées ===\n");
+    printf("Total coups joués : %d\n", totalCoupsJoues);
+    printf("Total temps écoulé : %ds\n", totalTemps);
+    printf("Total morts blancs : %d\n", totalMortsBlancs);
+    printf("Total morts noirs : %d\n", totalMortsNoirs);
+    printf("Total score blancs : %d\n", totalScoreWhite);
+    printf("Total score noirs : %d\n", totalScoreBlack);
+
+    free(parties);
+
+    // Retour au menu principal
+    printf("\n1. Retour au menu principal\n");
+    printf("Votre choix : ");
+    int choix;
+    scanf("%d", &choix);
+    viderTampon();
+
+    if (choix == 1) {
+        afficherMenu();
+    } else {
+        afficherStatistiques();
+    }
+}
 
 
 void viderTampon() {
@@ -103,6 +195,7 @@ void afficherMenu() {
         page1();
         return;
     case 2:
+        afficherStatistiques();
         return;
     case 3:
     attendre(0.5);
@@ -377,6 +470,8 @@ void page123(partie *nv){
     page12(nv); //retourne au menu en actualisant la nouvelle partie (essentiel pour laffichage)
     return;
 }
+
+
 
 int main(){
     srand(time(NULL));
