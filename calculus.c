@@ -12,6 +12,10 @@ enum cas2{RAS, PRISEENPASSANT};
 int verificationdeplacementmenantalechec(int xarrive, int yarrive, int info, piece plateau[TAILLE][TAILLE], deplacement depart);
 void removeimpossiblemove(deplacement* listemove, deplacement depart, piece plateau[TAILLE][TAILLE]);
 int estdanslaliste(int dep, deplacement* liste);
+
+
+
+
 int applymove(piece plateau[TAILLE][TAILLE], deplacement depart, deplacement arrivee, int test, int* scorewhite, int* scoreblack, int* mortsnoirs, int* mortsblancs){
     //les coups sont donnes de la maniere suivant : depart:xy et arrivee:XY
     // x et X représentent la ligne de depart/arrivée
@@ -43,79 +47,30 @@ int applymove(piece plateau[TAILLE][TAILLE], deplacement depart, deplacement arr
     
     return val;
 }
-
-
-int estunvraicoup(int coup,deplacement *liste, int* infosurlecoup){
-    deplacement* adresse = liste;
-    if(liste->info==-1){return 0;} //aucun coup dispo pas besoin de cette ligne si on verifie avant quaucun coup est dispo
-    while (adresse != NULL) {
-        if (adresse->x == coup/10 && coup%10 == adresse->y) {
-            if(adresse->info==-2){return 0;}
-            *infosurlecoup=adresse->info;
-            return(1);
+int verifs(partie* p,int couleur,int infoatransmettre){
+    
+    //infoatransmettre :
+    //0 : la totale (promotion)
+    if(infoatransmettre==0){
+    for(int i=0;i<TAILLE;i++){
+        for(int j=0;j<TAILLE;j++){
+            if(p->plateau[i][j].opt==2 && p->plateau[i][j].couleur==couleur){p->plateau[i][j].opt=0;}
+            if(p->plateau[i][j].rang==PION && p->plateau[i][j].couleur==couleur && i==7*(1-couleur)){
+                if(p->niveauIA==0 || couleur==0){
+                    deplacement montrer={i,j,-2};
+                    affiche(p->plateau,&montrer);
+                    promotion(i, j, p->plateau); //promotion !!
+                }
+                else{
+                    int r = rand()%4;
+                    p->plateau[i][j].rang=r+1; // 0= pion, 1à4 = CAVALIER,FOU... 5=ROI
+                }
+            }
         }
-        adresse = adresse->next;
     }
-    return -1; //coup pas dispo
+    }
+    return 0;
 }
-
-void freelist(deplacement *liste){
-    if(liste==NULL || liste->info==-1){return;}
-    else{
-        freelist(liste->next);
-        free(liste);
-        return;
-    }
-}
-
-
-int tailleliste(deplacement *liste){
-    if(liste->next==NULL){return 1;}
-    else{
-        int j=tailleliste(liste->next);
-        return j+1;
-    }
-}
-
-
-
-void addtolist(int x, int y, int info,deplacement* head, piece plateau[TAILLE][TAILLE]) {
-    
-    
-    deplacement* noeud = (deplacement*)malloc(sizeof(deplacement));
-    if (noeud == NULL) {
-        printf("Erreur d'allocation mémoire\n");
-        exit(1);
-    }
-    
-    noeud->x = x;
-    noeud->y = y;
-
-    //transmission de l'information : quel pièce est mangée :
-    if(info!=-2 && plateau[x][y].rang!=-1){ //si ce n'est ni une case vide, ni un appel de cette fonction pour colorier notre propre pion en orange (voir affiche)
-        info=10 + plateau[x][y].couleur * 10 + plateau[x][y].rang;}
-    //transmission de l'information : quel pièce est mangée
-
-    noeud->info = info;
-    noeud->next = NULL;
-    if(head->info==-1){
-        head->x = noeud->x;
-        head->y = noeud->y;
-        head->info = noeud->info;
-        head->next = NULL;
-        free(noeud);
-        return;
-    }
-
-    deplacement* adresse=head;
-    while(adresse->next!=NULL){
-        adresse=adresse->next;
-    }
-    adresse->next=noeud;
-    return;
-}
-
-
 
 deplacement *possiblemove(piece plateau[TAILLE][TAILLE], deplacement depart){
     deplacement* head=(deplacement*)malloc(sizeof(deplacement));
@@ -219,7 +174,6 @@ deplacement *possiblemove(piece plateau[TAILLE][TAILLE], deplacement depart){
     }
     return head;
 }
-
 void listedemespions(piece plateau[TAILLE][TAILLE],int couleur, deplacement *liste, int niveauIA){
     //parcourir le plateau
     int nvmax=0;                                          //CARACTERISTIQUES voir ci dessous   
@@ -276,109 +230,6 @@ void listedemespions(piece plateau[TAILLE][TAILLE],int couleur, deplacement *lis
     }
     return;
  }
-
-
-int roienechec(piece plateau[TAILLE][TAILLE], deplacement monroi){
-    int couleurdemonroi=plateau[monroi.x][monroi.y].couleur;
-    for(int i=0;i<TAILLE;i++){
-        for(int j=0;j<TAILLE;j++){
-            if(plateau[i][j].couleur==1-couleurdemonroi){ //1- couleur de mon roi = couleur complementaire
-                //je regarde la liste de ses coups dispo
-                deplacement dep={i,j};
-                deplacement* liste=possiblemove(plateau,dep);
-                deplacement* adresse = liste;
-                if(liste->info==-1){continue;} // regarder si cette ligne est enlevable
-                while (adresse != NULL) {
-                    if (adresse->x == monroi.x && monroi.y == adresse->y) {
-                        return(1); //mon roi est dans la liste des coups adverses!
-                    }
-                    adresse = adresse->next;
-                }
-
-            }
-        }
-    }
-    return 0;
-}
-
-
-int verificationdeplacementmenantalechec(int xarrive, int yarrive, int info, piece plateau[TAILLE][TAILLE], deplacement depart) {
-    //simulation
-    piece temp={plateau[xarrive][yarrive].rang,plateau[xarrive][yarrive].couleur,plateau[xarrive][yarrive].opt}; //LA METTRE EN MALLOC!!!
-    int couleur = plateau[depart.x][depart.y].couleur;
-    deplacement arrivee={xarrive,yarrive};
-    applymove(plateau,depart,arrivee,1,0,0,0,0);
-    //
-    int roix=0;
-    int roiy=0;
-    int echec=0;
-    while(plateau[roix][roiy].couleur!=couleur || plateau[roix][roiy].rang!=ROI){roix++;if(roix==TAILLE){roiy++;roix=0;}}
-    deplacement roi={roix,roiy};
-    echec=roienechec(plateau, roi);
-    // remise en ordre
-    applymove(plateau,arrivee,depart,1,0,0,0,0);
-    plateau[xarrive][yarrive].couleur=temp.couleur;
-    plateau[xarrive][yarrive].rang=temp.rang;
-    plateau[xarrive][yarrive].opt=temp.opt;
-    //
-    return echec;
-}
-
-int verifs(partie* p,int couleur,int infoatransmettre){
-    
-    //infoatransmettre :
-    //0 : la totale (promotion)
-    if(infoatransmettre==0){
-    for(int i=0;i<TAILLE;i++){
-        for(int j=0;j<TAILLE;j++){
-            if(p->plateau[i][j].opt==2 && p->plateau[i][j].couleur==couleur){p->plateau[i][j].opt=0;}
-            if(p->plateau[i][j].rang==PION && p->plateau[i][j].couleur==couleur && i==7*(1-couleur)){
-                if(p->niveauIA==0 || couleur==0){
-                    deplacement montrer={i,j,-2};
-                    affiche(p->plateau,&montrer);
-                    promotion(i, j, p->plateau); //promotion !!
-                }
-                else{
-                    int r = rand()%4;
-                    p->plateau[i][j].rang=r+1; // 0= pion, 1à4 = CAVALIER,FOU... 5=ROI
-                }
-            }
-        }
-    }
-    }
-    return 0;
-}
-
-void removeimpossiblemove(deplacement* listemove, deplacement depart, piece plateau[TAILLE][TAILLE]){
-    deplacement* adresse = listemove;
-    deplacement* precedent=NULL;
-    while (adresse != NULL) {
-        if (verificationdeplacementmenantalechec(adresse->x,adresse->y,0,plateau,depart)==1) {
-            if (adresse->next == NULL && precedent == NULL) {
-                // Si c'est le dernier élément et qu'il n'y a pas de précédent (liste avec 1 seul élément)
-                adresse->info = -1;
-                return;
-            } else if (adresse->next == NULL) {
-                // Si c'est le dernier élément mais il y a un précédent
-                precedent->next = NULL;
-                return;
-            } else if (precedent == NULL) {
-                // Si on supprime le premier élément
-                *listemove = *(adresse->next);  // Copie des données du suivant dans la tête    // Libération de l'ancien suivant
-                adresse = listemove;
-            } else {
-                // Si on supprime un élément intermédiaire
-                precedent->next = adresse->next;
-                adresse = precedent->next;
-            }
-
-        }
-        else{precedent = adresse;
-            adresse = adresse->next;
-}
-    }
-}
-
 deplacement* sendattackpossibilites(piece tableau[TAILLE][TAILLE], deplacement* liste, int nvIA) {
     if (!liste) return NULL;
 
@@ -429,7 +280,93 @@ deplacement* sendattackpossibilites(piece tableau[TAILLE][TAILLE], deplacement* 
     return newliste;
 }
 
+void removeimpossiblemove(deplacement* listemove, deplacement depart, piece plateau[TAILLE][TAILLE]){
+    deplacement* adresse = listemove;
+    deplacement* precedent=NULL;
+    while (adresse != NULL) {
+        if (verificationdeplacementmenantalechec(adresse->x,adresse->y,0,plateau,depart)==1) {
+            if (adresse->next == NULL && precedent == NULL) {
+                // Si c'est le dernier élément et qu'il n'y a pas de précédent (liste avec 1 seul élément)
+                adresse->info = -1;
+                return;
+            } else if (adresse->next == NULL) {
+                // Si c'est le dernier élément mais il y a un précédent
+                precedent->next = NULL;
+                return;
+            } else if (precedent == NULL) {
+                // Si on supprime le premier élément
+                *listemove = *(adresse->next);  // Copie des données du suivant dans la tête    // Libération de l'ancien suivant
+                adresse = listemove;
+            } else {
+                // Si on supprime un élément intermédiaire
+                precedent->next = adresse->next;
+                adresse = precedent->next;
+            }
 
+        }
+        else{precedent = adresse;
+            adresse = adresse->next;
+}
+    }
+}
+int roienechec(piece plateau[TAILLE][TAILLE], deplacement monroi){
+    int couleurdemonroi=plateau[monroi.x][monroi.y].couleur;
+    for(int i=0;i<TAILLE;i++){
+        for(int j=0;j<TAILLE;j++){
+            if(plateau[i][j].couleur==1-couleurdemonroi){ //1- couleur de mon roi = couleur complementaire
+                //je regarde la liste de ses coups dispo
+                deplacement dep={i,j};
+                deplacement* liste=possiblemove(plateau,dep);
+                deplacement* adresse = liste;
+                if(liste->info==-1){continue;} // regarder si cette ligne est enlevable
+                while (adresse != NULL) {
+                    if (adresse->x == monroi.x && monroi.y == adresse->y) {
+                        return(1); //mon roi est dans la liste des coups adverses!
+                    }
+                    adresse = adresse->next;
+                }
+
+            }
+        }
+    }
+    return 0;
+}
+int verificationdeplacementmenantalechec(int xarrive, int yarrive, int info, piece plateau[TAILLE][TAILLE], deplacement depart) {
+    //simulation
+    piece temp={plateau[xarrive][yarrive].rang,plateau[xarrive][yarrive].couleur,plateau[xarrive][yarrive].opt};
+    int couleur = plateau[depart.x][depart.y].couleur;
+    deplacement arrivee={xarrive,yarrive};
+    applymove(plateau,depart,arrivee,1,0,0,0,0);
+    //
+    int roix=0;
+    int roiy=0;
+    int echec=0;
+    while(plateau[roix][roiy].couleur!=couleur || plateau[roix][roiy].rang!=ROI){roix++;if(roix==TAILLE){roiy++;roix=0;}}
+    deplacement roi={roix,roiy};
+    echec=roienechec(plateau, roi);
+    // remise en ordre
+    applymove(plateau,arrivee,depart,1,0,0,0,0);
+    plateau[xarrive][yarrive].couleur=temp.couleur;
+    plateau[xarrive][yarrive].rang=temp.rang;
+    plateau[xarrive][yarrive].opt=temp.opt;
+    //
+    return echec;
+}
+
+
+int estunvraicoup(int coup,deplacement *liste, int* infosurlecoup){
+    deplacement* adresse = liste;
+    if(liste->info==-1){return 0;} //aucun coup dispo pas besoin de cette ligne si on verifie avant quaucun coup est dispo
+    while (adresse != NULL) {
+        if (adresse->x == coup/10 && coup%10 == adresse->y) {
+            if(adresse->info==-2){return 0;}
+            *infosurlecoup=adresse->info;
+            return(1);
+        }
+        adresse = adresse->next;
+    }
+    return -1; //coup pas dispo
+}
 int estdanslaliste(int dep, deplacement* liste){
     deplacement* adresse = liste;
     if(adresse->info==-1){return 0;}
@@ -443,6 +380,57 @@ int estdanslaliste(int dep, deplacement* liste){
 }
 
 
+
+void addtolist(int x, int y, int info,deplacement* head, piece plateau[TAILLE][TAILLE]) {
+    
+    
+    deplacement* noeud = (deplacement*)malloc(sizeof(deplacement));
+    if (noeud == NULL) {
+        printf("Erreur d'allocation mémoire\n");
+        exit(1);
+    }
+    
+    noeud->x = x;
+    noeud->y = y;
+
+    //transmission de l'information : quel pièce est mangée :
+    if(info!=-2 && plateau[x][y].rang!=-1){ //si ce n'est ni une case vide, ni un appel de cette fonction pour colorier notre propre pion en orange (voir affiche)
+        info=10 + plateau[x][y].couleur * 10 + plateau[x][y].rang;}
+    //transmission de l'information : quel pièce est mangée
+
+    noeud->info = info;
+    noeud->next = NULL;
+    if(head->info==-1){
+        head->x = noeud->x;
+        head->y = noeud->y;
+        head->info = noeud->info;
+        head->next = NULL;
+        free(noeud);
+        return;
+    }
+
+    deplacement* adresse=head;
+    while(adresse->next!=NULL){
+        adresse=adresse->next;
+    }
+    adresse->next=noeud;
+    return;
+}
+void freelist(deplacement *liste){
+    if(liste==NULL || liste->info==-1){return;}
+    else{
+        freelist(liste->next);
+        free(liste);
+        return;
+    }
+}
+int tailleliste(deplacement *liste){
+    if(liste->next==NULL){return 1;}
+    else{
+        int j=tailleliste(liste->next);
+        return j+1;
+    }
+}
 void lireliste(deplacement* liste){
     deplacement* adresse = liste;
     if(adresse->info==-1){printf("liste nulle");return;}
@@ -452,3 +440,18 @@ void lireliste(deplacement* liste){
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
