@@ -1,11 +1,11 @@
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -pthread  # Ajout de -pthread ici
 OBJFILES = menu.o jeu.o temps.o plateau.o calculus.o misc.o
 EXE = menu
 
 # Règle pour compiler l'exécutable
 $(EXE): $(OBJFILES)
-	$(CC) $(OBJFILES) -o $(EXE)
+	$(CC) $(OBJFILES) -o $(EXE) -pthread  # Ajout de -pthread lors de la liaison
 
 # Règle pour compiler chaque fichier source en fichier objet
 menu.o: menu.c menu.h
@@ -27,14 +27,11 @@ misc.o: misc.c misc.h
 	$(CC) $(CFLAGS) -c misc.c
 
 # Nettoyage des fichiers objets et exécutables
-##del /Q $(OBJFILES) $(EXE)
 clean:
-	del /Q $(OBJFILES) $(EXE)
+	rm -f $(OBJFILES) $(EXE)
 
 # Règle pour exécuter le programme après compilation
-# rajouter chcp 65001  pour windows
 run: $(EXE)
-	chcp 65001
 	./$(EXE)
 
 # Règle par défaut : tout faire
