@@ -10,7 +10,7 @@
 #include <pthread.h> // Pour utiliser les threads
 
 int demander_et_convertir_case();
-int choixducoup1(piece tableau[TAILLE][TAILLE], int couleur, int tab[2], int aidealavisee);
+int choixducoup1(piece tableau[TAILLE][TAILLE], int couleur, int tab[3], int aidealavisee);
 int v;
 void score(partie *p);
 pthread_t timer_thread_team0, timer_thread_team1;  // Threads pour les timers
@@ -56,7 +56,7 @@ void jeu(partie *p){
         clearecran();
         affiche(p->plateau,0);
         int tabpositions[3]; 
-        printf("Il vous reste %d secondes.\n",TEMPS-p->tempsteam0);
+        printf("Il vous reste %d secondes.  \033[90m%ds pour l'adversaire.\n\033[0m\n",TEMPS-p->tempsteam0,TEMPS-p->tempsteam1);
         start_timer(&p->tempsteam0,0);
         int c1=choixducoup1(p->plateau,0,tabpositions,p->aidealavisee); // la tabposition est mis à jour avec cette ligne
         if(c1==-1){break;}
@@ -75,10 +75,10 @@ void jeu(partie *p){
         if(tour==1){ 
             if(p->niveauIA==0){ //si cest du humain contre humain
                 start_timer(&p->tempsteam1,1);
-                printf("Il vous reste %d secondes.\n",TEMPS-p->tempsteam1);
+                printf("Il vous reste %d secondes.  \033[90m%ds pour l'adversaire.\n\033[0m\n",TEMPS-p->tempsteam1,TEMPS-p->tempsteam0);
                 clearecran();   
                 affiche(p->plateau,0);
-                int tabpositions[2]; 
+                int tabpositions[3]; 
                 int c1=choixducoup1(p->plateau,1,tabpositions,p->aidealavisee);
                 if(c1==-1){break;}
                 if(c1==-2){p->etat=2;p->gagnant=0;break;}
@@ -90,7 +90,7 @@ void jeu(partie *p){
                 tour=0;
             }
             if(p->niveauIA==1 || p->niveauIA==2 || p->niveauIA==3){
-                p->tempsteam1=p->tempsteam1+rand()%30/((p->niveauIA));
+                p->tempsteam1=p->tempsteam1+rand()%60/((p->niveauIA));
                 if(p->tempsteam1>TEMPS){p->etat=2;p->gagnant=0;break;}
                 printf("\033[31mIA\033[0m en cours de réflexion...\n");
                 
@@ -120,7 +120,7 @@ void jeu(partie *p){
                     else{p->etat=2;p->gagnant=2;}
                     break;
             ////////////////////////////////////////////////////////////////////////////////// ECHEC ET MAT OU PAT
-                }   
+                }  
                 
 
                 //////choix du pion à déplacer
@@ -170,7 +170,6 @@ void jeu(partie *p){
     remplacerOuAjouterPartie(p);
     score(p);
     attendre(5);
-    afficherMenu();
     return;
 }
 
@@ -287,13 +286,13 @@ void score(partie *p){
     printf("Score final :\n");
     }
     else{
-    printf("-- Partie en pause -- !\n");printf("Score :\n");}
+    printf("-- Partie en pause -- !\n");}
     printf("Score bleu : %d\n",p->scoreblack);
     printf("Score rouge : %d\n",p->scorewhite);
     printf("Nombre de coups joués : %d\n",p->coupsjoues);
     printf("Nombre de pièces perdues par le joueur bleu : %d\n",p->mortsnoirs);
     printf("Nombre de pièces perdues par le joueur rouge : %d\n",p->mortsblancs);
-    printf("Temps de jeu : %d secondes\n",TEMPS-p->tempsteam0);
+    printf("Temps de jeu : %d secondes \t \033[90m%d\n\033[0m",TEMPS-p->tempsteam0,TEMPS-p->tempsteam1);
     if(p->etat==2){if(p->gagnant==0){printf("Joueur bleu gagnant");}
     else if(p->gagnant==1){printf("Joueur rouge gagnant");}
     else{printf("Match nul !");}}
