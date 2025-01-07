@@ -125,12 +125,14 @@ void afficherStatistiques() {
         printf("Morts noirs : %d\n", parties[i].mortsnoirs);
         printf("Score blancs : %d\n", parties[i].scorewhite);
         printf("Score noirs : %d\n", parties[i].scoreblack);
+        printf("Temps restant pour les noirs : %d\n", TEMPS-parties[i].tempsteam0);
+        printf("Temps restant pour les blancs : %d\n", TEMPS-parties[i].tempsteam1);
         if(parties[i].etat == 2){
         printf("Gagnant : %s\n", parties[i].gagnant == 0 ? "Joueur 0" : parties[i].gagnant == 1 ? "Joueur 1" : "Nul/Pat");}
 
         // Ajouter aux statistiques cumulées
         totalCoupsJoues += parties[i].coupsjoues;
-        totalTemps += parties[i].temps;
+        totalTemps += parties[i].tempsteam0 +parties[i].tempsteam1;
         totalMortsBlancs += parties[i].mortsblancs;
         totalMortsNoirs += parties[i].mortsnoirs;
         totalScoreWhite += parties[i].scorewhite;
@@ -276,7 +278,7 @@ void page11(){
     fread(parties, taillePartie, nbParties, fichier);
     fclose(fichier);
     for(int i=0;i<nbParties;i++){
-        printf("%d. %s \t\t time: %ds.\n",i+2,parties[i].nom,parties[i].temps);
+        printf("%d. %s \t\t time: %ds.\n",i+2,parties[i].nom,parties[i].tempsteam0);
     }
     int index=1;
     scanf("%d",&index);
@@ -379,7 +381,7 @@ void page13() {
 
     // Afficher la liste des parties avec leurs indices
     for (int i = 0; i < nbParties; i++) {
-        printf("%d. %s \t\t time: %ds.\n", i + 2, parties[i].nom, parties[i].temps);
+        printf("%d. %s \t\t time: %ds.\n", i + 2, parties[i].nom, parties[i].tempsteam0);
     }
 
     int index;

@@ -1,17 +1,53 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <time.h>
 #include "menu.h"
 #include "piece.h"
 #include "plateau.h"
 #include "calculus.h"
 #include "temps.h"
+#include <time.h>
+#include <pthread.h> // Pour utiliser les threads
 
 int demander_et_convertir_case();
 int choixducoup1(piece tableau[TAILLE][TAILLE], int couleur, int tab[2], int aidealavisee);
 int v;
 void score(partie *p);
+pthread_t timer_thread_team0, timer_thread_team1;  // Threads pour les timers
+
+// Variables globales pour le suivi des timers
+volatile int timer_running_team0 = 0;
+volatile int timer_running_team1 = 0;
+
+void *timer_function(void *arg) {
+    int *timer = (int *)arg;
+    while (*timer < TEMPS) {
+        attendre(1);
+        (*timer)++;  // Décrémenter chaque seconde
+    }
+    return NULL;
+}
+
+void start_timer(int *timer, int team) {
+    if (team == 0) {
+        timer_running_team0 = 1;
+        pthread_create(&timer_thread_team0, NULL, timer_function, timer);
+    } else {
+        timer_running_team1 = 1;
+        pthread_create(&timer_thread_team1, NULL, timer_function, timer);
+    }
+}
+
+void stop_timer(int team) {
+    if (team == 0) {
+        timer_running_team0 = 0;
+        pthread_cancel(timer_thread_team0);  // Stopper le thread
+    } else {
+        timer_running_team1 = 0;
+        pthread_cancel(timer_thread_team1);  // Stopper le thread
+    }
+}
+
 void jeu(partie *p){
     int tour = p->aquiletour; 
     while(p->etat==0){
@@ -20,6 +56,8 @@ void jeu(partie *p){
         clearecran();
         affiche(p->plateau,0);
         int tabpositions[3]; 
+        printf("Il vous reste %d secondes.\n",TEMPS-p->tempsteam0);
+        start_timer(&p->tempsteam0,0);
         int c1=choixducoup1(p->plateau,0,tabpositions,p->aidealavisee); // la tabposition est mis à jour avec cette ligne
         if(c1==-1){break;}
         if(c1==-2){p->etat=2;p->gagnant=1;break;}
@@ -29,14 +67,15 @@ void jeu(partie *p){
         deplacement d2 = {tabpositions[1]/10,tabpositions[1]%10};
         applymove(p->plateau,d1,d2,0,&p->scorewhite,&p->scoreblack,&p->mortsnoirs,&p->mortsblancs);
         verifs(p,0,0);
+        stop_timer(0);
         tour=1;      
         }
-
-
 
         ////////////////// TOUR DE L'IA / JOUEUR 1
         if(tour==1){ 
             if(p->niveauIA==0){ //si cest du humain contre humain
+                start_timer(&p->tempsteam1,1);
+                printf("Il vous reste %d secondes.\n",TEMPS-p->tempsteam1);
                 clearecran();   
                 affiche(p->plateau,0);
                 int tabpositions[2]; 
@@ -47,9 +86,12 @@ void jeu(partie *p){
                 deplacement d1 = {tabpositions[0]/10,tabpositions[0]%10};
                 deplacement d2 = {tabpositions[1]/10,tabpositions[1]%10};
                 applymove(p->plateau,d1,d2,0,&p->scorewhite,&p->scoreblack,&p->mortsnoirs,&p->mortsblancs);
+                stop_timer(1);
                 tour=0;
             }
             if(p->niveauIA==1 || p->niveauIA==2 || p->niveauIA==3){
+                p->tempsteam1=p->tempsteam1+rand()%30/((p->niveauIA));
+                if(p->tempsteam1>TEMPS){p->etat=2;p->gagnant=0;break;}
                 printf("\033[31mIA\033[0m en cours de réflexion...\n");
                 
                 ////// Initialisation
@@ -61,7 +103,9 @@ void jeu(partie *p){
                 if(echec==1){printf("\033[38;5;214m! Vous êtes en situation d'échec !\033[0m\n");}
                 deplacement* listepionjouables=(deplacement*)malloc(sizeof(deplacement));
                 listepionjouables->info=-1;
+                printf("je créé la liste des mpions");
                 listedemespions(p->plateau,tour,listepionjouables, p->niveauIA);
+                printf("jai la liste de mes pions");
                 ////// Initialisation
 
 
@@ -128,6 +172,7 @@ void jeu(partie *p){
     afficherMenu();
     return;
 }
+
 
 
 
@@ -247,7 +292,7 @@ void score(partie *p){
     printf("Nombre de coups joués : %d\n",p->coupsjoues);
     printf("Nombre de pièces perdues par le joueur bleu : %d\n",p->mortsnoirs);
     printf("Nombre de pièces perdues par le joueur rouge : %d\n",p->mortsblancs);
-    printf("Temps de jeu : %d secondes\n",p->temps);
+    printf("Temps de jeu : %d secondes\n",TEMPS-p->tempsteam0);
     if(p->etat==2){if(p->gagnant==0){printf("Joueur bleu gagnant");}
     else if(p->gagnant==1){printf("Joueur rouge gagnant");}
     else{printf("Match nul !");}}

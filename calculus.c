@@ -225,6 +225,7 @@ void listedemespions(piece plateau[TAILLE][TAILLE],int couleur, deplacement *lis
                     }
                     if(ajoutable==1){addtolist(i,j,nvmax,liste,plateau);}
                 }
+                freelist(listemove);
             }
         }
     }
@@ -321,6 +322,7 @@ int roienechec(piece plateau[TAILLE][TAILLE], deplacement monroi){
                 if(liste->info==-1){continue;} // regarder si cette ligne est enlevable
                 while (adresse != NULL) {
                     if (adresse->x == monroi.x && monroi.y == adresse->y) {
+                        freelist(liste);
                         return(1); //mon roi est dans la liste des coups adverses!
                     }
                     adresse = adresse->next;

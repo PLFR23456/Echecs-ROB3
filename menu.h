@@ -13,7 +13,8 @@ typedef struct partie{
     int aidealavisee;
     char nom[TAILLENOMPARTIE];
     //statistiques
-    int temps;
+    int tempsteam0;
+    int tempsteam1;
     int coupsjoues;
     int mortsblancs;
     int mortsnoirs;
