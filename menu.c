@@ -295,6 +295,7 @@ void page11(){
     partie current = parties[index - 2];
     free(parties);
     jeu(&current);
+    afficherMenu();
 
 
 }
@@ -328,6 +329,7 @@ void page12(partie *nv){
     case 5:
         enregistrerPartie(nv);
         jeu(nv);
+        afficherMenu();
         return;
     default:
         afficherMenu();
@@ -448,7 +450,8 @@ void page121(partie *nv){
 void page122(partie *nv){
     clearecran();
     int n=0;
-    printf("Tapez le niveau de l'IA (voir aide pour + de détails) :\n\n");
+    printf("Détails :\n\tNv 0 = vous jouez contre vous-même (pas d'IA)\n\tNv 1 = IA fait des mouvements randoms mais valables\n\tNv 2 = si l'IA peut attaquer, elle attaquera\n\tNv 3 = si l'IA peut attaquer plusieurs pions, elle attaquera le meilleur\n\n");
+    printf("Tapez le niveau de l'IA :\n\n");
     scanf("%d",&n);
     viderTampon();
     nv->niveauIA=n;
