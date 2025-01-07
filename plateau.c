@@ -13,36 +13,41 @@ void affiche(piece plateau[TAILLE][TAILLE], deplacement *liste){
         printf("%d",8-i);
         for(int j=0;j<TAILLE;j++){
             printf("|");
+            if ((i + j) % 2 == 0) {
+                printf("\033[48;5;15m"); // Fond blanc
+            } else {
+                printf("\033[48;5;235m"); // Fond noir
+            }
             if(plateau[i][j].couleur==1){
-                printf("\033[31m");
+                printf("\033[31m"); //couleur rouge
                 }
             else if (plateau[i][j].couleur==0)
             {
-                printf("\033[34m");
+                printf("\033[34m"); //couleur bleu
             }
             if(liste!=0){checkAndPrint(liste,i,j);}
             switch (plateau[i][j].rang)
             {
             case PION:
-                printf("♟ ");
+                printf("♟P");
                 break;
             case CAVALIER:
-                printf("♞ ");
+                printf("♞C");
                 break;
             case FOU:
-                printf("♝ ");
+                printf("♝F");
                 break;
             case TOUR:
-                printf("♜ ");
+                printf("♜T");
                 break;
             case DAME:
-                printf("♛ ");
+                printf("♛D");
                 break;
             case ROI:
-                printf("♚ ");
+                printf("♚R");
                 break;
             default:
-                printf("🙾");
+                printf(" ");
                 #ifndef _WIN32
                 printf(" "); //affichage different avec linux! donc rajouter un espace
                 #endif
@@ -64,7 +69,8 @@ void checkAndPrint(deplacement* head, int x, int y) {
     while (adresse != NULL) {  // Changer la condition pour aussi vérifier le dernier noeud
         if (adresse->x == x && adresse->y == y) {
             if(adresse->info==-2){printf("\033[38;5;214m");return;}
-            printf("\033[33m"); // Afficher en jaune si la case est dans la liste des déplacements possibles
+            // Afficher en jaune si la case est dans la liste des déplacements possibles
+            printf("\033[48;5;226m"); // Fond jaune
             return;  // Si un coup est trouvé, on n'a pas besoin de continuer à chercher
         }
         adresse = adresse->next;

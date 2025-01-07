@@ -88,7 +88,7 @@ deplacement *possiblemove(piece plateau[TAILLE][TAILLE], deplacement depart){
     switch (r)
     {
     case PION:{
-        if(opt==1){if(plateau[x+(2-4*color)][y].couleur!=color){addtolist(x+(2-4*color), y, RAS, head,plateau);}}
+        if(opt==1){if(plateau[x+(2-4*color)][y].couleur==-1){addtolist(x+(2-4*color), y, RAS, head,plateau);}}
         if(x<TAILLE-1 && x>0){if(plateau[x+(1-2*color)][y].couleur==-1){addtolist(x+(1-2*color), y, RAS, head,plateau);}}
         //regarde la case devant et a gauche/droite
         if(y<TAILLE-1){if(plateau[x][y+1].opt==2 && plateau[x][y+1].couleur!=color){addtolist(x, y+1, RAS, head,plateau);}}; //prise en passant

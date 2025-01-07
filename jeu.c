@@ -17,6 +17,7 @@ void jeu(partie *p){
     while(p->etat==0){
         ////////////////// TOUR DE L'HUMAIN / JOUEUR 0
         if(tour==0){
+        clearecran();
         affiche(p->plateau,0);
         int tabpositions[3]; 
         int c1=choixducoup1(p->plateau,0,tabpositions,p->aidealavisee); // la tabposition est mis à jour avec cette ligne
@@ -30,13 +31,13 @@ void jeu(partie *p){
         verifs(p,0,0);
         tour=1;      
         }
-        affiche(p->plateau,0);
 
 
 
         ////////////////// TOUR DE L'IA / JOUEUR 1
         if(tour==1){ 
             if(p->niveauIA==0){ //si cest du humain contre humain
+                clearecran();   
                 affiche(p->plateau,0);
                 int tabpositions[2]; 
                 int c1=choixducoup1(p->plateau,1,tabpositions,p->aidealavisee);
@@ -171,6 +172,7 @@ int choixducoup1(piece tableau[TAILLE][TAILLE], int couleur, int tab[3],int aide
             deplacement* liste = possiblemove(tableau,dep);
             removeimpossiblemove(liste, dep, tableau);
             addtolist(dep.x,dep.y,-2,liste,tableau); //on rajoute dep à la liste avec info à -2 UNIQUEMENT pour qu'il apparaisse en orange
+            clearecran();
             affiche(tableau,liste);
             do{
                 printf("Donnez la case dans laquelle déplacer le pion\033[90m [-1 : return.]\033[0m\n");
