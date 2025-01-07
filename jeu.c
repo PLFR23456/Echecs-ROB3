@@ -139,6 +139,7 @@ void jeu(partie *p){
                 //////choix du déplacement
                 deplacement* listedep=(deplacement*)malloc(sizeof(deplacement));
                 listedep=possiblemove(p->plateau,start);
+                removeimpossiblemove(listedep,start,p->plateau);                
                 if(p->niveauIA==2 || p->niveauIA==3){
                     listedep=sendattackpossibilites(p->plateau,listedep, p->niveauIA);
                 }
