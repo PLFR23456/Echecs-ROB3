@@ -25,146 +25,6 @@ void enregistrerPartie(partie *p) {
     //Ferme le fichier
     fclose(fichier);
 }
-void remplacerOuAjouterPartie(partie *p) {
-    FILE *fichier = fopen("save", "r+b");
-    
-    if (fichier == NULL) {
-        perror("Erreur lors de l'ouverture du fichier");
-        return;
-    }
-    
-    size_t taille_partie = sizeof(partie);
-    int numero_partie = p->numpartie;
-    long position = -1;
-
-    // Parcourir le fichier pour vérifier si la partie existe déjà
-    while (1) {
-        long current_pos = ftell(fichier); // Sauvegarder la position actuelle
-        partie temp_partie;
-        
-        // Lire une partie à la fois
-        size_t read_size = fread(&temp_partie, taille_partie, 1, fichier);
-        
-        // Si nous avons atteint la fin du fichier, sortir de la boucle
-        if (read_size == 0) {
-            break;
-        }
-
-        // Si l'identifiant de la partie correspond, enregistrer la position
-        if (temp_partie.numpartie == numero_partie) {
-            position = current_pos;
-            break;
-        }
-    }
-
-    // Si la partie existe déjà, la remplacer
-    if (position != -1) {
-        fseek(fichier, position, SEEK_SET);
-        fwrite(p, taille_partie, 1, fichier);
-        printf("Partie %d mise à jour avec succès.\n", numero_partie);
-    } else {
-        // Si la partie n'existe pas, l'ajouter à la fin du fichier
-        enregistrerPartie(p);
-    }
-
-    fclose(fichier);
-}
-void afficherStatistiques() {
-    clearecran();
-    printf("\n=== Statistiques ===\n");
-
-    // Ouvrir le fichier des parties
-    FILE *fichier = fopen("save", "rb");
-    if (fichier == NULL) {
-        perror("Erreur d'ouverture du fichier");
-        attendre(2);
-        afficherMenu();
-        return;
-    }
-
-    size_t taillePartie = sizeof(partie);
-    fseek(fichier, 0, SEEK_END);
-    long tailleFichier = ftell(fichier);
-    int nbParties = tailleFichier / taillePartie;
-
-    if (nbParties == 0) {
-        printf("Aucune partie enregistrée.\n");
-        fclose(fichier);
-        attendre(2);
-        afficherMenu();
-        return;
-    }
-
-    // Allouer de la mémoire pour stocker les parties
-    partie *parties = (partie *)malloc(nbParties * taillePartie);
-    if (parties == NULL) {
-        perror("Erreur d'allocation mémoire");
-        fclose(fichier);
-        afficherMenu();
-        return;
-    }
-
-    rewind(fichier);
-    fread(parties, taillePartie, nbParties, fichier);
-    fclose(fichier);
-
-    // Statistiques cumulées
-    int totalCoupsJoues = 0;
-    int totalTemps = 0;
-    int totalMortsBlancs = 0;
-    int totalMortsNoirs = 0;
-    int totalScoreWhite = 0;
-    int totalScoreBlack = 0;
-
-    // Afficher les statistiques de chaque partie
-    for (int i = 0; i < nbParties; i++) {
-        printf("\nPartie %d :\n", i + 1);
-        printf("Nom : %s\n", parties[i].nom);
-        printf("Coups joués : %d\n", parties[i].coupsjoues);
-        printf("Morts blancs : %d\n", parties[i].mortsblancs);
-        printf("Morts noirs : %d\n", parties[i].mortsnoirs);
-        printf("Score blancs : %d\n", parties[i].scorewhite);
-        printf("Score noirs : %d\n", parties[i].scoreblack);
-        printf("Temps restant pour les noirs : %d\n", TEMPS-parties[i].tempsteam0);
-        printf("Temps restant pour les blancs : %d\n", TEMPS-parties[i].tempsteam1);
-        if(parties[i].etat == 2){
-        printf("Gagnant : %s\n", parties[i].gagnant == 0 ? "Joueur 0" : parties[i].gagnant == 1 ? "Joueur 1" : "Nul/Pat");}
-
-        // Ajouter aux statistiques cumulées
-        totalCoupsJoues += parties[i].coupsjoues;
-        totalTemps += parties[i].tempsteam0 +parties[i].tempsteam1;
-        totalMortsBlancs += parties[i].mortsblancs;
-        totalMortsNoirs += parties[i].mortsnoirs;
-        totalScoreWhite += parties[i].scorewhite;
-        totalScoreBlack += parties[i].scoreblack;
-    }
-
-    // Afficher les statistiques cumulées
-    printf("\n=== Statistiques cumulées ===\n");
-    printf("Total coups joués : %d\n", totalCoupsJoues);
-    printf("Total temps écoulé : %ds\n", totalTemps);
-    printf("Total morts blancs : %d\n", totalMortsBlancs);
-    printf("Total morts noirs : %d\n", totalMortsNoirs);
-    printf("Total score blancs : %d\n", totalScoreWhite);
-    printf("Total score noirs : %d\n", totalScoreBlack);
-
-    free(parties);
-
-    // Retour au menu principal
-    printf("\n1. Retour au menu principal\n");
-    printf("Votre choix : ");
-    int choix;
-    scanf("%d", &choix);
-    viderTampon();
-
-    if (choix == 1) {
-        afficherMenu();
-    } else {
-        afficherStatistiques();
-    }
-}
-
-
 void viderTampon() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF); // Vide tout jusqu'au prochain saut de ligne
@@ -197,7 +57,6 @@ void afficherMenu() {
         page1();
         return;
     case 2:
-        afficherStatistiques();
         return;
     case 3:
     attendre(0.5);
@@ -229,10 +88,7 @@ void page1(){
         return;
     case 2:{
         partie nv={0};
-        initialise_plateau(nv.plateau);  
-        nv.numpartie=rand()%100;//creation du nouvel échiquier
-        //determiner le numero de la partie puis lui attribuer probleme si on supprime la partie tous les numeros décalés
-        // lui attribuer un identifiant non attribué
+        initialise_plateau(nv.plateau);  //creation du nouvel échiquier
         page12(&nv);
         return;
         }
@@ -278,7 +134,7 @@ void page11(){
     fread(parties, taillePartie, nbParties, fichier);
     fclose(fichier);
     for(int i=0;i<nbParties;i++){
-        printf("%d. %s \t\t time: %ds.\n",i+2,parties[i].nom,parties[i].tempsteam0);
+        printf("%d. %s \t\t time: %ds.\n",i+2,parties[i].nom,parties[i].temps);
     }
     int index=1;
     scanf("%d",&index);
@@ -297,7 +153,6 @@ void page11(){
     partie current = parties[index - 2];
     free(parties);
     jeu(&current);
-    afficherMenu();
 
 
 }
@@ -308,9 +163,8 @@ void page12(partie *nv){
     printf("1. Nom  :  %s\n",((nv->nom)));
     printf("2. Niveau IA  :  %d\n",(nv->niveauIA));
     printf("3. Aide à la visée ?  :  %d\n",(nv->aidealavisee));
-    printf("4. ?Tableau personnalisé?\n");
-    printf("5. LANCER PARTIE\n");
-    printf("6. Quitter\n");
+    printf("4. LANCER PARTIE\n");
+    printf("5. Quitter\n");
     printf("\nVotre choix : ");
     int choix;
     scanf("%d", &choix);
@@ -327,11 +181,8 @@ void page12(partie *nv){
         page123(nv);
         return;
     case 4:
-        creer_partie_personnalisee(nv->plateau);
-    case 5:
         enregistrerPartie(nv);
         jeu(nv);
-        afficherMenu();
         return;
     default:
         afficherMenu();
@@ -381,7 +232,7 @@ void page13() {
 
     // Afficher la liste des parties avec leurs indices
     for (int i = 0; i < nbParties; i++) {
-        printf("%d. %s \t\t time: %ds.\n", i + 2, parties[i].nom, parties[i].tempsteam0);
+        printf("%d. %s \t\t time: %ds.\n", i + 2, parties[i].nom, parties[i].temps);
     }
 
     int index;
@@ -452,8 +303,7 @@ void page121(partie *nv){
 void page122(partie *nv){
     clearecran();
     int n=0;
-    printf("Détails :\n\tNv 0 = vous jouez contre vous-même (pas d'IA)\n\tNv 1 = IA fait des mouvements randoms mais valables\n\tNv 2 = si l'IA peut attaquer, elle attaquera\n\tNv 3 = si l'IA peut attaquer plusieurs pions, elle attaquera le meilleur\n\n");
-    printf("Tapez le niveau de l'IA :\n\n");
+    printf("Tapez le niveau de l'IA (voir aide pour + de détails) :\n\n");
     scanf("%d",&n);
     viderTampon();
     nv->niveauIA=n;
@@ -476,14 +326,8 @@ void page123(partie *nv){
     return;
 }
 
-
-
 int main(){
     srand(time(NULL));
     afficherMenu();
     return 0;
 }
-
-//A
-
-

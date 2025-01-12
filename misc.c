@@ -1,8 +1,8 @@
 #include "piece.h"
 #include "misc.h"
 
-int valeur_piece(int x){
-    switch (x)
+int valeur_piece(piece x){
+    switch (x.rang)
             {
             case PION:
                 return 1;
