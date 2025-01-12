@@ -4,6 +4,7 @@
 #include <windows.h> // Pour Sleep
 #else
 #include <unistd.h>  // Pour sleep
+#include <stdlib.h> // pr linux
 #endif
 // utiliser des bibilotheques si le multiplateforme est trop complexe
 void clearecran(){

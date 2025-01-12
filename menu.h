@@ -13,16 +13,20 @@ typedef struct partie{
     int aidealavisee;
     char nom[TAILLENOMPARTIE];
     //statistiques
-    int temps;
+    int tempsteam0;
+    int tempsteam1;
     int coupsjoues;
     int mortsblancs;
     int mortsnoirs;
     int scorewhite;
     int scoreblack;
     //optionnel
-    int gagnant; //0
+    int gagnant; //0 = joueur 0, 1 = joueur 1, 2=pat/nul
     int etat; //0 = en jeu, 1= pause, 2=fini
+    int numpartie;
 }partie;
 void enregistrerPartie(partie *p);
+void remplacerOuAjouterPartie(partie *p);
 void viderTampon();
+void afficherMenu();
 #endif

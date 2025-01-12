@@ -10,6 +10,7 @@ typedef struct{
     0=R
     1=pion ou tour pas encore avancé
     2 = pion mangeable au tour suivant / vient juste detre avancé /!\ achaque debut de tour verifier si un de nos pions esst 2 POUR LEM mettre en 0
+    3= pion promu (utile pour inverser le sens de deplacement)
     */
 }piece;
 
